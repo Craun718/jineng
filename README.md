@@ -23,11 +23,27 @@
 │   │   ├── SKILL.md
 │   │   └── agents/
 │   │       └── openai.yaml
+│   ├── skill-distiller/
+│   │   ├── SKILL.md
+│   │   └── agents/
+│   │       └── openai.yaml
+│   ├── skill-mentor/
+│   │   ├── SKILL.md
+│   │   └── agents/
+│   │       └── openai.yaml
 │   └── ...你的其他技能
 └── .github/
     └── workflows/
         └── validate.yml
 ```
+
+## 当前技能
+
+| Skill | 用途 |
+| --- | --- |
+| `example-skill` | 最小化模板，用于创建或校验仓库中的技能结构 |
+| `skill-distiller` | 把当前会话的主要工作流提炼成可复用技能 |
+| `skill-mentor` | 根据会话中的 skill 执行情况提出优化方案，并确认后再写入 |
 
 核心约定：
 

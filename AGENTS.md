@@ -12,6 +12,7 @@ This repository stores portable Agent Skills. Each skill must be a self-containe
 - Add `agents/openai.yaml` only when Codex UI metadata is needed.
 - Run `npm run validate` before committing.
 - Run `npm run sync` when adding, renaming, or removing skills.
+- Update the repository root `README.md` after adding, renaming, removing, or materially changing a skill.
 
 ## Discovery Compatibility
 
