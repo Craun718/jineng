@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Mentor"
+  short_description: "Review skills used this session and propose improvements"
+  default_prompt: "Use $skill-mentor to review the skill used in this conversation and propose approved improvements."
