@@ -6,7 +6,8 @@
       "title": "Personal Skills",
       "description": "Skills maintained in this repository.",
       "skills": [
-        "example-skill"
+        "example-skill",
+        "skill-distiller"
       ]
     }
   ]

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Distiller"
+  short_description: "Distill current session workflows into a new skill"
+  default_prompt: "Use $skill-distiller to distill the current conversation into a skill."
