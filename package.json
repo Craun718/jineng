@@ -1,0 +1,17 @@
+{
+  "name": "my-skills",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Personal multi-platform agent skills repository",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate-skills.mjs",
+    "install:skills": "node scripts/install-skills.mjs",
+    "sync": "node scripts/sync-manifests.mjs",
+    "check": "npm run sync && npm run validate && git diff --exit-code"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

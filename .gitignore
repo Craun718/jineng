@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+.env
+*.log
+
+# Installed skills written by project-scope installers
+.agents/skills/
+.claude/skills/
+.codex/skills/
+.cursor/skills/
+.opencode/skills/
+.roo/skills/
+.windsurf/skills/
+skills-lock.json
