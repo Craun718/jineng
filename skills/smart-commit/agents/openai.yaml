@@ -1,0 +1,4 @@
+interface:
+  display_name: "Smart Commit"
+  short_description: "Commit staged changes across repositories and submodules"
+  default_prompt: "Use $smart-commit to commit the staged changes with Conventional Commits."

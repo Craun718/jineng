@@ -7,9 +7,9 @@
       "name": "my-skills",
       "source": "./",
       "skills": [
-        "./skills/example-skill",
         "./skills/skill-distiller",
-        "./skills/skill-mentor"
+        "./skills/skill-mentor",
+        "./skills/smart-commit"
       ]
     }
   ]

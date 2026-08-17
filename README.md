@@ -31,6 +31,12 @@
 │   │   ├── SKILL.md
 │   │   └── agents/
 │   │       └── openai.yaml
+│   ├── smart-commit/
+│   │   ├── SKILL.md
+│   │   ├── references/
+│   │   │   └── conventional-commits.md
+│   │   └── agents/
+│   │       └── openai.yaml
 │   └── ...你的其他技能
 └── .github/
     └── workflows/
@@ -44,6 +50,7 @@
 | `example-skill` | 最小化模板，用于创建或校验仓库中的技能结构 |
 | `skill-distiller` | 把当前会话的主要工作流提炼成可复用技能 |
 | `skill-mentor` | 根据会话中的 skill 执行情况提出优化方案，并确认后再写入 |
+| `smart-commit` | 按 Conventional Commits 提交已暂存变更，并递归处理子模块 |
 
 核心约定：
 
