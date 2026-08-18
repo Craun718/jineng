@@ -1,115 +1,126 @@
 ---
 name: smart-commit
-description: Commit staged changes with Conventional Commits, handling nested git submodules deepest-first and re-staging updated submodule pointers. Use when committing staged work or creating conventional commit messages.
+description: Commit ONLY the currently staged (git index) changes with a Conventional Commits message whose type, scope, and language match the repository's existing commit history. Use whenever the user wants to commit what is already staged without staging more files or touching the working tree. Never stages source files or edits files (sole exception: recording a submodule's new commit pointer after committing that submodule). When the repo has submodules, commits them depth-first before the parent.
 ---
 
 # Smart Commit
 
-Commit staged changes with Conventional Commits messages, handling nested git
-submodules in the correct order: submodules first (deepest first), then the
-parent repo. Match the language of the repo's existing commit history.
+Create a Conventional Commits commit from the **current git index only**. Leave
+the index and working tree exactly as they are: no `git add` of source files, no
+file edits, and no `git commit -a`. The one deliberate exception is submodule
+pointers.
+
+## Hard rules
+
+These rules are non-negotiable:
+
+- Stage nothing. Never run `git add`, `git add -A/-p/.`, `git rm --cached`,
+  `git restore --staged`, `git commit -a`, or any command that mutates the
+  index or working tree. The sole exception is `git add <submodule-path>` after
+  committing a submodule whose pointer advanced during this run.
+- Edit nothing. Do not modify, format, lint, run codegen, or save any file.
+- Commit exactly the current staged content. If the index is empty and no
+  submodule produced a pointer bump, stop and report: "Nothing is staged,
+  nothing to commit." Do not stage fallback files.
+- Do not pass `--no-verify`; respect hooks unless the user explicitly asks.
+- If a pre-commit hook fails, report the failure verbatim. Do not retry with
+  bypass flags.
+- Keep the subject and body in the same language. Never add a
+  `Co-authored-by` trailer or any other co-author or generated-by attribution.
 
 ## Workflow
 
-### 1. Detect staged changes
+1. Handle submodules first. If `.gitmodules` exists or `git submodule status`
+   lists entries, commit them depth-first before this repo. Skip this step if
+   there are no submodules.
+2. Confirm staged content in the current repo:
 
-Run in the repo root:
+   ```sh
+   git diff --cached --stat
+   ```
 
-```sh
-git diff --cached --stat
-```
+   If it is empty, stop unless submodule handling produced a staged pointer.
+3. Read the staged diff and status:
 
-If nothing is staged, **stop and report**. Do not auto-stage files the user has
-not chosen; this skill commits what is already staged, nothing more. The user
-owns the staging decision.
+   ```sh
+   git diff --cached
+   git status
+   ```
 
-### 2. Discover submodules recursively
+   Ignore every unstaged and untracked entry; never touch them.
+4. Learn this repo's commit style from its own recent history:
 
-```sh
-git submodule status --recursive
-```
+   ```sh
+   git log -n 25 --format='%s'
+   ```
 
-This lists every submodule top-down, including nested ones. For each path
-returned, check for staged changes inside it:
+   If the command returns fewer than 3 commit subjects, ask the user which
+   language to use for the new commit and wait for the answer before writing
+   the message. Otherwise, match the dominant language, Conventional Commits
+   types, scope usage, casing, and punctuation. Do not invent scopes when
+   history does not use them.
+5. Write a Conventional Commits message in the matched language and style.
+6. Commit with one `-m` per paragraph:
 
-```sh
-git -C <submodule-path> diff --cached --stat
-```
+   ```sh
+   git commit -m "<subject>" -m "<optional body>" -m "<optional footer>"
+   ```
 
-Collect the set of submodule paths that **have staged changes**. If none do,
-skip to step 5 (commit the main repo only).
+   Do not use flags that change what is committed: no `-a`, paths, or
+   `--amend` unless the user asks.
 
-### 3. Determine commit-message language from history
+## Submodules
 
-For each repo or submodule that has staged changes, inspect recent commits:
+Commit **depth-first, innermost first**. Treat every submodule as its own
+repository with its own history, language, and conventions.
 
-```sh
-git log --oneline -20
-```
+For each submodule:
 
-Identify the dominant language of existing messages (e.g. English, Chinese,
-Japanese). Write every new commit message **in that same language** so the
-history stays consistent. Also note conventions visible in the history: whether
-scopes are used, typical subject length, presence of bodies/footers.
+1. List submodules with `git submodule status`; recurse into nested submodules.
+2. Run this workflow in the submodule. If it has nothing staged, skip it.
+3. After committing a submodule, its HEAD advances while the parent's index
+   still points to the old commit. In the parent, and only for that pointer,
+   run:
 
-### 4. Commit submodules - deepest first
+   ```sh
+   git add <submodule-path>
+   ```
 
-Order submodules by nesting depth: **deepest first, then work upward** toward
-the main repo. For each submodule with staged changes, in that order:
+4. Continue upward. For a chain `main -> A -> B`, commit B, stage B in A,
+   commit A, then stage A in main.
 
-1. Inspect the staged diff: `git -C <path> diff --cached`
-2. Write a Conventional Commits message in the history's language
-3. Commit: `git -C <path> commit -m "<subject>"` (use `-F` for a multi-line body)
-4. **Re-stage the updated submodule pointer in its parent:**
-   `git -C <parent-path> add <submodule-relative-path>`
+A submodule pointer already staged by the user must be included as-is; do not
+re-stage or amend it. Submodules may be in detached HEAD; committing there is
+valid, but report the state and do not push or create branches unless asked.
 
-Step 4 is essential: committing a submodule changes the commit its gitlink
-points at. The parent must stage that new pointer or the parent's commit will
-not record the submodule update. For a nested chain (main -> A -> B): commit B,
-`add` B inside A, commit A, `add` A inside main.
+If the parent has no staged content of its own and only has pointer updates
+produced by this run, commit those updates using the parent's history style,
+typically `chore` or `build`.
 
-### 5. Commit the main repo
+## Conventional Commits
 
-After all submodules are committed and their pointers re-staged:
-
-1. Re-check staged state: `git diff --cached --stat` (now includes updated
-   submodule pointers)
-2. Write a Conventional Commits message for the main repo's staged changes
-3. Commit: `git commit -m "<subject>"`
-
-If the main repo had **no staged changes of its own** but submodule pointers were
-re-staged in step 4, still commit those pointer updates so the parent records
-the new submodule commits. Report clearly what was committed at each level.
-
-## Message quality
-
-- Write the subject in imperative mood matching the history language
-  (English: "add login validation"; Chinese: "添加登录校验").
-- Keep the subject at most 72 characters.
-- Lowercase the first word of the subject; no trailing period.
-- Add a body only when the "why" is not obvious from the diff.
-- Use a scope to name the affected module/component only if the repo
-  conventionally uses scopes (decide from history).
-
-## Conventional Commits format
-
-```
-<type>[scope]: <description>
+```text
+<type>[optional scope]: <description>
 
 [optional body]
 
 [optional footer(s)]
 ```
 
-Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
-`build`, `ci`, `chore`, `revert`. For the full spec, the breaking-change (`!`)
-notation, and footer conventions, see
-`references/conventional-commits.md`.
+Use the type that best fits the staged change: `feat`, `fix`, `docs`, `style`,
+`refactor`, `perf`, `test`, `build`, `ci`, `chore`, or `revert`. Use `!` before
+the colon for breaking changes. The description should be imperative and have
+no trailing period unless the repository history uses periods. Add a body only
+when it explains non-obvious why; keep it in the same language as the subject.
+Use footers only when relevant, such as `BREAKING CHANGE` or an issue reference.
 
-## Key rules
+See `references/conventional-commits.md` for the full format and examples.
 
-- Never auto-stage user files. Only commit what is already staged.
-- Always commit submodules before the parent repo.
-- Always re-stage the submodule pointer in the parent after each submodule commit.
-- Match the existing commit-message language.
-- This skill commits; it does **not** push. Confirm with the user before pushing.
+## Edge cases
+
+- Fewer than 3 commit subjects: ask the user which language to use; do not
+  assume English or another default.
+- Mixed history with at least 3 subjects: use the dominant language among the
+  most recent 25 subjects.
+- If rebase, merge, cherry-pick, or revert is in progress, stop and report it.
+  Do not commit through an in-progress operation.

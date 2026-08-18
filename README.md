@@ -50,7 +50,7 @@
 | `example-skill` | 最小化模板，用于创建或校验仓库中的技能结构 |
 | `skill-distiller` | 把当前会话的主要工作流提炼成可复用技能 |
 | `skill-mentor` | 根据会话中的 skill 执行情况提出优化方案，并确认后再写入 |
-| `smart-commit` | 按 Conventional Commits 提交已暂存变更，并递归处理子模块 |
+| `smart-commit` | 仅提交当前已暂存变更，匹配仓库提交风格；历史不足时询问提交语言，并深度优先处理子模块 |
 
 核心约定：
 
